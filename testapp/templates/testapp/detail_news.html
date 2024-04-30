@@ -1,0 +1,68 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	  <meta charset="UTF-8">
+	  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	  <title>Detail News</title>
+	  <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+	  <link rel="stylesheet" href="{% static 'testapp/styles.css' %}">
+</head>
+<body>
+	{% include 'testapp/header.html' %}
+	{% if error_message %}
+		<p style="color: red;">{{ error_message }}</p>
+  	{% endif %}
+		<div class="container mt-5">
+			<div class="col-md-6">
+				<h1>{{ news.title }}</h1>
+				<h3><a href="{{ news.author.get_absolute_url }}">{{ news.author.nickname }}</a></h3>
+				<p>Created: {{ news.created_at }}</p>
+				{% if news.created_at != news.updated_at %}
+					<p>Updated: {{ news.updated_at }}</p>
+				{% endif %}
+				<p><strong>Content:</strong> {{ news.content|linebreaksbr }}</p>
+			</div>
+			<div class="col-md-6">
+				<h2>Comments</h2>
+				{% if user.is_authenticated %}
+				<form method="post" action="{% url 'add_news_comment' news_slug=news.slug %}">
+					{% csrf_token %}
+					<input type="hidden" name="next_page" value="{{ request.get_full_path }}">
+					{{ comment_form.as_p }}
+					<button type="submit" class="btn btn-primary mt-3">Add Comment</button>
+				</form>
+				{% else %}
+				<p>Please <a href="{% url 'login' %}">login</a> to add a comment.</p>
+				{% endif %}
+				{% for comment in comments %}
+				{% if comment.parent_comment is None %}
+				<div class="mb-3">
+					<p><a href="{{ comment.user.get_absolute_url }}">{{ comment.user.nickname }}</a></p>
+					<p>{{ comment.text }}</p>
+					<form method="post" action="{% url 'add_news_comment' news_slug=news.slug %}">
+						{% csrf_token %}
+						<input type="hidden" name="next_page" value="{{ request.get_full_path }}">
+						<input type="hidden" name="parent_comment_id" value="{{ comment.id }}">
+						{{ comment_form.as_p }}
+						<button type="submit" class="btn btn-primary mt-3">Add Reply to this Comment</button>
+					</form>
+					{% for reply in comment.replies.all %}
+					<div class="ml-3">
+						<p><a href="{{ reply.user.get_absolute_url }}">{{ reply.user.nickname }}</a></p>
+						<p>{{ reply.text }}</p>
+					</div>
+					{% empty %}
+					<p>No replies yet.</p>
+					{% endfor %}
+				</div>
+				<hr>
+				{% endif %}
+				{% empty %}
+				<p>No comments yet.</p>
+				{% endfor %}
+			</div>			
+		</div>
+	{% include 'testapp/footer.html' %}
+</body>
+</html>

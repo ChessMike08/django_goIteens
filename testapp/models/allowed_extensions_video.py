@@ -1,0 +1,16 @@
+allowed_extensions_video = [
+    "mp4",
+    "avi",
+    "mkv",
+    "mov",
+    "wmv",
+    "avi",
+    "avchd",
+    "flv",
+    "f4v",
+    "swf",
+    "mkv",
+    "webm",
+    "html5",
+    "mpeg-2",
+]

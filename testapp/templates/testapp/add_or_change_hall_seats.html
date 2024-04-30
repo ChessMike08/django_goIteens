@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add or Change Hall Seats</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        h1, h2 {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        form {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        hr {
+            margin-top: 20px;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        ul li {
+            margin-bottom: 10px;
+        }
+
+        ul li:first-child {
+            font-weight: bold;
+        }
+
+        ul li span {
+            margin-left: 10px;
+            color: #888;
+        }
+
+        .edit-delete {
+            display: flex;
+            align-items: center;
+        }
+
+        .edit-delete button {
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Add or Change Hall Seats</h1>
+    <h2>({{ hall.id }}) {{ hall.name }}</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Add new seat in this row</button>
+    </form>
+    <hr>
+    {% if seats %}
+        <h2>Existing Seats</h2>
+        {% for row_number, seats_in_row in seats_by_row.items %}
+            <h2>Row {{ row_number }}</h2>
+            <ul>
+                {% for seat in seats_in_row %}
+                    <li class="edit-delete">
+                        Seat: {{ seat.line_number }}
+                        <span>(Seat ID: {{ seat.id }})</span>
+                        <a href="{% url 'edit_seat' seat_id=seat.id %}">Edit</a>
+                        <form method="post" action="{% url 'delete_seat' seat_id=seat.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="next_page" value="{{ request.path }}">
+                            <button type="submit">Delete</button>
+                        </form>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endfor %}
+    {% endif %}
+</body>
+</html>

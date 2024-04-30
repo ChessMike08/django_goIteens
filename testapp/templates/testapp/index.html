@@ -1,0 +1,94 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'testapp/styles.css' %}">
+    <title>Main Page</title>
+</head>
+<body>
+    {% include 'testapp/header.html' %}
+    <div class="container">
+        <h1>Welcome to the Main Page!</h1>
+        {% if all_movie_for_sale %}
+            <h2>Movies:</h2>
+            <ul>
+                {% for movie in all_movie_for_sale %}
+                    <li><a href="{% url 'details_movie' slug=movie.slug %}"><img src="{{ movie.poster.url }}" alt="poster" title="{{ movie.title }}" class="img-fluid mb-3"></a></li>
+                {% endfor %}
+            </ul>
+            <div class="pagination">
+                <span class="step-links">
+                    {% if all_movie_for_sale.has_previous %}
+                        <a href="?page=1">&laquo; first</a>
+                        <a href="?page={{ all_movie_for_sale.previous_page_number }}">previous</a>
+                    {% endif %}
+
+                    <span class="current">
+                        Page {{ all_movie_for_sale.number }} of {{ all_movie_for_sale.paginator.num_pages }}.
+                    </span>
+
+                    {% if all_movie_for_sale.has_next %}
+                        <a href="?page={{ all_movie_for_sale.next_page_number }}">next</a>
+                        <a href="?page={{ all_movie_for_sale.paginator.num_pages }}">last &raquo;</a>
+                    {% endif %}
+                </span>
+            </div>
+        {% endif %}
+        {% if new_user_list %}
+            <h2>New Users:</h2>
+            <ul>
+                {% for user in new_user_list %}
+                    <li><a href="{{ user.get_absolute_url }}">{{ user.nickname }}</a></li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        {% if last_news_list %}
+            <h2>Last News:</h2>
+            <ul>
+                {% for news in last_news_list %}
+                    <li>{{ news.title }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        {% if last_news_comments %}
+            <h3>Last comments:</h3>
+            <ul>
+                {% for comment in last_news_comments %}
+                    <li>User: "{{ comment.user.nickname }}" wrote: 
+                    {% if comment.text|length > 30 %}
+                        {{ comment.text|slice:":30" }}...
+                    {% else %}
+                        {{ comment.text }}
+                    {% endif %}
+                    on {{ comment.news.title }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        {% if last_posts_list %}
+            <h2>Last Posts:</h2>
+            <ul>
+                {% for post in last_posts_list %}
+                    <li>{{ post.title }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        {% if last_post_comments %}
+            <h3>Last comments:</h3>
+            <ul>
+                {% for comment in last_post_comments %}
+                    <li>User: "{{ comment.user.nickname }}" wrote: 
+                    {% if comment.text|length > 30 %}
+                        {{ comment.text|slice:":30" }}...
+                    {% else %}
+                        {{ comment.text }}
+                    {% endif %}
+                    on {{ comment.post.title }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
+    {% include 'testapp/footer.html' %}
+</body>
+</html>

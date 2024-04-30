@@ -1,0 +1,27 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Your Reservation Details</title>
+	<link href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'testapp/styles.css' %}">
+</head>
+<body>
+	{% include 'testapp/header.html' %}
+	<p><strong>Reservation ID:</strong> {{ reservation.id }}<br></p>
+	<p><strong>Order ID:</strong> {{ reservation.order.id }}<br></p>
+	<p><strong>Order User:</strong> {{ reservation.order.user }}<br></p>
+	<p><strong>Bank:</strong> {{ reservation.order.bank }}<br></p>
+	<p><strong>Card Number:</strong> {{ reservation.order.card_number }}<br></p>
+	<p><strong>Token:</strong> {{ reservation.order.token }}<br></p>
+	<p><strong>Paid:</strong> {{ reservation.order.paid }}<br></p>
+	<p><strong>Comment:</strong> {{ reservation.order.comment }}<br></p>
+	<p><strong>Seat:</strong> {{ reservation.seat }}<br></p>
+	<p><strong>Hall:</strong> {{ reservation.seat.hall }}<br></p>
+	<p><strong>Session:</strong> {{ reservation.session }}<br></p>
+	<p><strong>Created At:</strong> {{ reservation.created_at }}<br></p>
+	{% include 'testapp/footer.html' %}
+</body>
+</html>

@@ -1,0 +1,4 @@
+.env
+media/
+venv/
+testapp/migrations/

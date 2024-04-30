@@ -1,0 +1,176 @@
+{% load static %}
+{% load custom_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detail Movie</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'testapp/styles.css' %}">
+    <style>
+        .stars {
+            display: inline-block;
+            font-size: 24px;
+        }
+        .stars span {
+            color: gold;
+        }
+    </style>
+</head>
+<body>
+    {% include 'testapp/header.html' %}
+    {% if error_message %}
+        <p style="color: red;">{{ error_message }}</p>
+    {% endif %}
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-6">
+                <img src="{{ movie.poster.url }}" alt="Poster" class="img-fluid mb-3">
+                <h2>{{ movie.title }} ({{ movie.year }}, {{ movie.min_age }}+)</h2>
+                <p><strong>Director:</strong> {{ movie.director }}</p>
+                <p><strong>Rating:</strong> {{ movie.rating|floatformat:"1" }}</p>
+                <p><strong>Duration:</strong> {{ movie.duration }}</p>
+                <p><strong>Release Date:</strong> {{ movie.release_date }}</p>
+                <p><strong>Hire End:</strong> {{ movie.hire_end }}</p>
+                <p><strong>Description:</strong> {{ movie.description|linebreaksbr }}</p>
+                <p><strong>Starring:</strong> {{ movie.starring|linebreaksbr }}</p>
+                {% if movie.trailers_youtube_code %}
+                    <iframe class="embed-responsive-item" src="https://www.youtube.com/embed/{{ movie.trailers_youtube_code }}"
+                    title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+                {% else %}
+                    <a href="{{ movie.trailer }}" class="btn btn-primary">Watch Trailer</a>
+                {% endif %}
+                <p><a href="{% url 'edit_movie' slug=movie.slug %}">Edit Movie</a></p>
+                {% if movie.videos.all %}
+                    <h2>Videos</h2>
+                    {% for video in movie.videos.all %}
+                        <p>{{ video.file }}</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            <div class="col-md-6">
+                <div class="col-md-12">
+                    {% if subscription %}
+                        {% if subscription.action_alerts %}
+                            <form method="post" action="{% url 'subscription_to_movie' movie_slug=movie.slug %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="next_page" value="{{ request.get_full_path }}">
+                                <input type="hidden" name="action_alerts" value="false">
+                                <button type="submit">Don't receive messages</button>
+                            </form>
+                        {% else %}
+                            <form method="post" action="{% url 'subscription_to_movie' movie_slug=movie.slug %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="next_page" value="{{ request.get_full_path }}">
+                                <input type="hidden" name="action_alerts" value="true">
+                                <button type="submit">Receive messages</button>
+                            </form>
+                        {% endif %}
+                        <form method="post" action="{% url 'unsubscription_to_movie' subscription_to_movie_id=subscription.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="next_page" value="{{ request.get_full_path }}">
+                            <button type="submit">Unsubscribe</button>
+                        </form>                        
+                    {% else %}
+                        <form method="post" action="{% url 'subscription_to_movie' movie_slug=movie.slug %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="action_alerts" value="true">
+                            <input type="hidden" name="next_page" value="{{ request.get_full_path }}">
+                            <button type="submit">Subscribe</button>
+                        </form>
+                    {% endif %}
+                </div>
+                <div class="col-md-12">
+                    <h2>Recommendations</h2>
+                    {% if user.is_authenticated %}
+                        {% if user_recommendation %}
+                            <div class="col-md-12 mb-3">
+                                <h2>Your Recommendation</h2>
+                                <p>{{ user_recommendation }}</p>
+                                {% if user_recommendation.is_positive %}
+                                    <form method="post" action="{% url 'add_recommendation' %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next_page" value="{{ request.get_full_path }}">
+                                        <input type="hidden" name="movie_id" value="{{ movie.id }}">
+                                        <button type="submit" name="recommendation" value="false">Change to anti-recommend</button>
+                                    </form>
+                                {% else %}
+                                    <form method="post" action="{% url 'add_recommendation' %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next_page" value="{{ request.get_full_path }}">
+                                        <input type="hidden" name="movie_id" value="{{ movie.id }}">
+                                        <button type="submit" name="recommendation" value="true">Change to recommend</button>
+                                    </form>
+                                {% endif %}
+                                <form method="post" action="{% url 'delete_recommendation' user_recommendation.id %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next_page" value="{{ request.get_full_path }}">
+                                    <button type="submit">Delete</button>
+                                </form>
+                            </div>
+                        {% else %}
+                            <div class="col-md-12 mb-3">
+                                <form method="post" action="{% url 'add_recommendation' %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next_page" value="{{ request.get_full_path }}">
+                                    <input type="hidden" name="movie_id" value="{{ movie.id }}">
+                                    <button type="submit" name="recommendation" value="true">Recommend</button>
+                                    <button type="submit" name="recommendation" value="false">Anti-recommend</button>
+                                </form>
+                            </div>
+                        {% endif %}
+                {% else %}
+                    <p>Please <a href="{% url 'login' %}">login</a> to add a recommendation.</p>
+                {% endif %}
+                    {% for rec in recommendations %}
+                        {% if rec != user_recommendation %}
+                            <div class="mb-3">
+                                <p>{{ rec }}</p>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <h2>Comments</h2>
+                {% if user.is_authenticated %}
+                <form method="post" action="{% url 'add_movie_comment' movie_slug=movie.slug %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next_page" value="{{ request.get_full_path }}">
+                    {{ comment_form.as_p }}
+                    <button type="submit" class="btn btn-primary mt-3">Add Comment</button>
+                </form>
+                {% else %}
+                    <p>Please <a href="{% url 'login' %}">login</a> to add a comment.</p>
+                {% endif %}
+                {% for comment in comments %}
+                    <div class="mb-3">
+                        <p><a href="{{ comment.user.get_absolute_url }}">{{ comment.user.nickname }}</a></p>
+                        <p>{{ comment.comment }}</p>
+                        <p>
+                            <div class="stars">
+                                {% for _ in comment.rating|get_range %}
+                                    <span>&#9733;</span>
+                                {% endfor %}
+                                {% if comment.rating < 5 %}
+                                    {% for _ in 5|get_range %}
+                                        {% if forloop.counter > comment.rating %}
+                                            <span>&#9734;</span>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% endif %}
+                            </div>                                                  
+                        </p>
+                    </div>
+                    <hr>
+                {% empty %}
+                    <p>No comments yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% include 'testapp/footer.html' %}
+</body>
+</html>

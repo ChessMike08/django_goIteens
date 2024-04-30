@@ -1,0 +1,180 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'testapp/styles.css' %}">
+    <title>User Profile</title>
+</head>
+<body>
+    {% include 'testapp/header.html' %}
+    <div class="container">
+        <div>
+            <h2>
+                {{ user.nickname }} |           
+                <span id="user-status"></span>
+            </h2>
+            <p id="last-action" data-last-action="{{ user.last_action|date:'Y-m-d H:i:s' }}">Last action: 
+                {% if not user.last_action %}
+                    Never
+                {% else %}
+                    {{ user.last_action }}
+                {% endif %}
+            </p>                                      
+            <p>Date joined: {{ user.date_joined }}</p>
+            <p>Email: {{ user.email }}</p>
+            <p>First Name: {{ user.first_name }}</p>
+            <p>Last Name: {{ user.last_name }}</p>
+            <p>Phone Number: {{ user.phone_number }}</p>
+            <p>Gender: {{ user.get_gender_display }}</p>
+            {% if request.user.is_authenticated  %}
+                {% if request.user.id == user.id %}
+                    <a href="{% url 'edit_profile' %}">Edit Profile</a>
+                {% else %}
+                    {% if subscription %}
+                        {% if subscription.action_alerts %}
+                        <form method="post" action="{% url 'subscription_to_user' slug=user.slug %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="next_page" value="{{ request.get_full_path }}">
+                            <input type="hidden" name="action_alerts" value="false">
+                            <button type="submit">Don't receive messages</button>
+                        </form>
+                        {% else %}
+                        <form method="post" action="{% url 'subscription_to_user' slug=user.slug %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="next_page" value="{{ request.get_full_path }}">
+                            <input type="hidden" name="action_alerts" value="true">
+                            <button type="submit">Receive messages</button>
+                        </form>
+                        {% endif %}
+                        <form method="post" action="{% url 'unsubscription_to_user' subscription.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="next_page" value="{{ request.get_full_path }}">
+                            <button type="submit">Un subscribe</button>
+                        </form>
+                    {% else %}
+                        <form method="post" action="{% url 'subscription_to_user' slug=user.slug %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="next_page" value="{{ request.get_full_path }}">
+                            <input type="hidden" name="action_alerts" value="true">
+                            <button type="submit">Subscribe</button>
+                        </form>
+                    {% endif %}
+                    {% if not user_banned %}
+                        <form method="post" action="{% url 'create_user_to_blacklist' slug=user.slug %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="next_page" value="{{ request.get_full_path }}">
+                            <button type="submit">Add to Blacklist</button>
+                        </form>
+                    {% else %}
+                        <form method="post" action="{% url 'delete_user_to_blacklist' slug=user.slug %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="next_page" value="{{ request.get_full_path }}">
+                            <button type="submit">Remove from Blacklist</button>
+                        </form>
+                    {% endif %}
+                {% endif %}
+            {% endif %}
+        </div>
+        {% if recommendations %}
+        <h2>Recommendations</h2>
+        <ul>
+            {% for recommendation in recommendations %}
+                <li>{{ recommendation }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% if authored_posts %}
+        <h2>Authored Posts</h2>
+        <ul>
+            {% for post in authored_posts %}
+                <li>{{ post }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+    {% include 'testapp/footer.html' %}
+    <script>
+        function updateLastActionStatus() {
+            var lastActionElement = document.getElementById('last-action');
+            var lastActionText = lastActionElement.getAttribute('data-last-action');
+            
+            if (lastActionText.includes("Never")) {
+                return;
+            }
+            
+            var lastActionTime = new Date(lastActionText);
+            var currentTime = new Date();
+            var timeDifferenceInSeconds = Math.floor((currentTime - lastActionTime) / 1000);
+    
+            var statusElement = document.getElementById('user-status');
+    
+            if (timeDifferenceInSeconds < 300) {
+                statusElement.innerHTML = '&#10004; Online';
+                statusElement.style.color = 'green';
+            } else {
+                statusElement.innerHTML = '&#10008; Offline';
+                statusElement.style.color = 'red';
+            }
+        }
+    
+        updateLastActionStatus();
+        
+        function updateLastActionTime() {
+            var lastActionElement = document.getElementById('last-action');
+            var lastActionText = lastActionElement.getAttribute('data-last-action');
+            var lastActionTime = new Date(lastActionText);
+            var currentTime = new Date();
+            var timeDifferenceInSeconds = Math.floor((currentTime - lastActionTime) / 1000);
+    
+            if (timeDifferenceInSeconds > 60) {
+                lastActionElement.setAttribute('data-last-action', currentTime.toISOString());
+                lastActionElement.textContent = 'Last action: Just now';
+            }
+        }
+    
+        setInterval(updateLastActionTime, 60000);
+    
+        function updateTime() {
+            var lastActionElement = document.getElementById('last-action');
+            var lastActionText = lastActionElement.getAttribute('data-last-action');
+            
+            if (lastActionText.includes("Never")) {
+                return;
+            }
+            
+            var lastActionTime = new Date(lastActionText);
+            var currentTime = new Date();
+            var timeDifferenceInSeconds = Math.floor((currentTime - lastActionTime) / 1000);
+            var yearsDifference = Math.floor(timeDifferenceInSeconds / 31536000);
+            var monthsDifference = Math.floor((timeDifferenceInSeconds % 31536000) / 2592000);
+            var weeksDifference = Math.floor((timeDifferenceInSeconds % 2592000) / 604800);
+            var daysDifference = Math.floor((timeDifferenceInSeconds % 604800) / 86400);
+            var hoursDifference = Math.floor((timeDifferenceInSeconds % 86400) / 3600);
+            var minutesDifference = Math.floor((timeDifferenceInSeconds % 3600) / 60);
+            var secondsDifference = timeDifferenceInSeconds % 60;
+            var displayString = 'Last action: ';
+    
+            if (yearsDifference > 0) {
+                displayString += yearsDifference + ' year' + (yearsDifference === 1 ? '' : 's') + ' ';
+            } else if (monthsDifference > 0) {
+                displayString += monthsDifference + ' month' + (monthsDifference === 1 ? '' : 's') + ' ';
+            } else if (weeksDifference > 0) {
+                displayString += weeksDifference + ' week' + (weeksDifference === 1 ? '' : 's') + ' ';
+            } else if (daysDifference > 0) {
+                displayString += daysDifference + ' day' + (daysDifference === 1 ? '' : 's') + ' ';
+            } else if (hoursDifference > 0) {
+                displayString += hoursDifference + ' hour' + (hoursDifference === 1 ? '' : 's') + ' ';
+            } else if (minutesDifference > 0) {
+                displayString += minutesDifference + ' minute' + (minutesDifference === 1 ? '' : 's') + ' ';
+            } else {
+                displayString += secondsDifference + ' second' + (secondsDifference === 1 ? '' : 's') + ' ';
+            }
+    
+            lastActionElement.textContent = displayString + 'ago';
+        }
+        setInterval(updateTime, 1000);
+    </script>    
+</body>
+</html>

@@ -1,0 +1,68 @@
+{% load static %}
+{% load custom_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Session Details</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .stars {
+            display: inline-block;
+            font-size: 24px;
+        }
+        .stars span {
+            color: gold;
+        }
+    </style>
+</head>
+<body>
+    {% include 'testapp/header.html' %}
+    {% if error_message %}
+        <p style="color: red;">{{ error_message }}</p>
+    {% endif %}
+    <h1>Session Details</h1>
+    <h2>{{ session }}</h2>
+    <p><strong>Start:</strong> {{ session.start }}</p>
+    <p><strong>End:</strong> {{ session.end }}</p>
+    <p><strong>Rating:</strong> {{ movie.rating|floatformat:"1" }}</p>
+    <h2>Comments</h2>
+    {% if user.is_authenticated %}
+    <form method="post" action="{% url 'add_session_comment' session_id=session.id %}">
+        {% csrf_token %}
+        <input type="hidden" name="next_page" value="{{ request.get_full_path }}">
+        {{ comment_form.as_p }}
+        <button type="submit">Add comment</button>
+    </form>
+    {% else %}
+        <p>Please <a href="{% url 'login' %}">login</a> to add a comment.</p>
+    {% endif %}
+    {% if comments %}
+        <ul>
+            {% for comment in comments %}
+            <div class="mb-3">
+                <p><a href="{{ comment.user.get_absolute_url }}">{{ comment.user.nickname }}</a></p>
+                <p>{{ comment.comment }}</p>
+                <p>
+                    <div class="stars">
+                        {% for _ in comment.rating|get_range %}
+                            <span>&#9733;</span>
+                        {% endfor %}
+                        {% if comment.rating < 5 %}
+                            {% for _ in 5|get_range %}
+                                {% if forloop.counter > comment.rating %}
+                                    <span>&#9734;</span>
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                    </div>                                                  
+                </p>
+            </div>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No comments yet.</p>
+    {% endif %}
+</body>
+</html>

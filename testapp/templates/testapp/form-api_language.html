@@ -1,0 +1,33 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add new language</title>
+    <link rel="stylesheet" href="{% static 'testapp/styles.css' %}">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+</head>
+<body>
+    {% include 'testapp/header.html' %}
+    <div class="container mt-5">
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+        <form method="post" novalidate>
+            {% csrf_token %}
+            <div class="form-group">
+                <p><button type="submit" name="search_and_save_all" class="btn btn-info" name="action" value="search">Search and save all languages</button></p>
+                {{ form.as_p }}
+                <p><button type="submit" name="search_by_code" class="btn btn-info" name="action" value="search">Search by Code</button></p>
+            </div>
+        </form>        
+    </div>
+    {% include 'testapp/footer.html' %}
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+</body>
+</html>
